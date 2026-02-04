@@ -53,7 +53,10 @@ Write-Host "Starting frontend on port $Port..." -ForegroundColor Cyan
 
 $env:BROWSER = "none"
 
-$proc = Start-Process -FilePath "npm" -ArgumentList @("run", "dev", "--", "--port", "$Port") -WorkingDirectory $PSScriptRoot -NoNewWindow -PassThru -RedirectStandardOutput $outLog -RedirectStandardError $errLog
+# Create React App uses PORT env var.
+$env:PORT = "$Port"
+
+$proc = Start-Process -FilePath "npm" -ArgumentList @("start") -WorkingDirectory $PSScriptRoot -NoNewWindow -PassThru -RedirectStandardOutput $outLog -RedirectStandardError $errLog
 Set-Content -LiteralPath $pidFile -Value $proc.Id -Encoding ascii
 
 for ($i = 0; $i -lt 30; $i++) {

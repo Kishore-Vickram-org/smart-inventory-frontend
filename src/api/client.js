@@ -3,8 +3,7 @@ const defaultBaseLocalDev = 'http://localhost:8081/api'
 
 function baseUrl() {
   const env = (
-    import.meta?.env?.VITE_API_BASE_URL ??
-    globalThis?.process?.env?.REACT_APP_API_BASE_URL ??
+    (typeof process !== 'undefined' && process?.env?.REACT_APP_API_BASE_URL) ??
     ''
   ).toString()
   if (env.trim().length > 0) return env.replace(/\/$/, '')
@@ -53,7 +52,26 @@ export async function apiFetch(path, init) {
   // Many endpoints (especially DELETE) intentionally return no body.
   if (res.status === 204) return undefined
 
+  const contentType = res.headers.get('content-type') ?? ''
   const text = await res.text()
   if (!text) return undefined
+
+  // If the response is HTML, it almost always means the API URL is wrong
+  // (e.g. Vercel SPA rewrite served index.html for /api/*).
+  if (contentType.includes('text/html') || /^\s*</.test(text)) {
+    throw new Error(
+      [
+        'API returned HTML instead of JSON.',
+        'This usually means your backend is not running, or REACT_APP_API_BASE_URL is not set correctly.',
+        `Requested: ${path}`,
+        `API base: ${baseUrl()}`,
+      ].join('\n'),
+    )
+  }
+
+  if (!contentType.includes('application/json')) {
+    throw new Error(`Expected JSON but got content-type: ${contentType || '(unknown)'}`)
+  }
+
   return JSON.parse(text)
 }
