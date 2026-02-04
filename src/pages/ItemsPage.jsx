@@ -9,6 +9,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -27,13 +28,14 @@ export default function ItemsPage() {
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
 
+  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' })
+
   const [editItem, setEditItem] = useState(null)
+  const [deleteTarget, setDeleteTarget] = useState(null)
 
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [qty, setQty] = useState(0)
-  const [unit, setUnit] = useState('pcs')
 
   async function refresh() {
     setLoading(true)
@@ -75,15 +77,12 @@ export default function ItemsPage() {
         sku: cleanSku,
         name: cleanName,
         description: description.trim() ? description.trim() : undefined,
-        quantity: Number.isFinite(qty) ? qty : 0,
-        unit: unit.trim() ? unit.trim() : undefined,
       })
       setSku('')
       setName('')
       setDescription('')
-      setQty(0)
-      setUnit('pcs')
       await refresh()
+      setToast({ open: true, message: 'Item created', severity: 'success' })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Create failed')
     }
@@ -130,23 +129,8 @@ export default function ItemsPage() {
               <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
             </Stack>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                label="Quantity"
-                type="number"
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
-                fullWidth
-              />
-              <TextField label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)} fullWidth />
+              <TextField label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} fullWidth />
             </Stack>
-            <TextField
-              label="Description (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              fullWidth
-              multiline
-              minRows={2}
-            />
             <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
               <Button
                 variant="outlined"
@@ -154,8 +138,6 @@ export default function ItemsPage() {
                   setSku('')
                   setName('')
                   setDescription('')
-                  setQty(0)
-                  setUnit('pcs')
                 }}
               >
                 Clear
@@ -186,10 +168,6 @@ export default function ItemsPage() {
                 <TableRow>
                   <TableCell sx={{ fontWeight: 800 }}>SKU</TableCell>
                   <TableCell sx={{ fontWeight: 800 }}>Name</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }} align="right">
-                    Qty
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 800 }}>Unit</TableCell>
                   <TableCell sx={{ fontWeight: 800 }}>Description</TableCell>
                   <TableCell sx={{ fontWeight: 800 }} align="right">
                     Actions
@@ -201,8 +179,6 @@ export default function ItemsPage() {
                   <TableRow key={it.id} hover>
                     <TableCell>{it.sku}</TableCell>
                     <TableCell>{it.name}</TableCell>
-                    <TableCell align="right">{it.quantity}</TableCell>
-                    <TableCell>{it.unit ?? ''}</TableCell>
                     <TableCell
                       sx={{
                         maxWidth: 360,
@@ -222,15 +198,7 @@ export default function ItemsPage() {
                           size="small"
                           color="error"
                           variant="outlined"
-                          onClick={async () => {
-                            setError(null)
-                            try {
-                              await deleteItem(it.id)
-                              await refresh()
-                            } catch (e) {
-                              setError(e instanceof Error ? e.message : 'Delete failed')
-                            }
-                          }}
+                          onClick={() => setDeleteTarget(it)}
                         >
                           Delete
                         </Button>
@@ -250,26 +218,89 @@ export default function ItemsPage() {
         onSaved={async () => {
           setEditItem(null)
           await refresh()
+          setToast({ open: true, message: 'Item updated', severity: 'success' })
         }}
         onError={(m) => setError(m)}
       />
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete item?"
+        description={deleteTarget ? `This will permanently delete “${deleteTarget.sku}”.` : ''}
+        confirmText="Delete"
+        confirmColor="error"
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          if (!deleteTarget) return
+          setError(null)
+          try {
+            await deleteItem(deleteTarget.id)
+            setDeleteTarget(null)
+            await refresh()
+            setToast({ open: true, message: 'Item deleted', severity: 'success' })
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Delete failed')
+          }
+        }}
+      />
+
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={2400}
+        onClose={() => setToast((t) => ({ ...t, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert
+          onClose={() => setToast((t) => ({ ...t, open: false }))}
+          severity={toast.severity}
+          variant="filled"
+          sx={{ borderRadius: 2 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
     </Stack>
+  )
+}
+
+function ConfirmDialog({ open, title, description, confirmText, confirmColor, onConfirm, onClose }) {
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="xs"
+      slotProps={{
+        backdrop: {
+          sx: { backdropFilter: 'blur(8px)', backgroundColor: 'rgba(2,6,23,0.28)' },
+        },
+      }}
+    >
+      <DialogTitle>{title}</DialogTitle>
+      <DialogContent sx={{ pt: 1 }}>
+        <Typography variant="body2" color="text.secondary">
+          {description}
+        </Typography>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" color={confirmColor ?? 'primary'} onClick={onConfirm}>
+          {confirmText ?? 'Confirm'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   )
 }
 
 function EditItemDialog({ item, onClose, onSaved, onError }) {
   const open = Boolean(item)
   const [name, setName] = useState('')
-  const [unit, setUnit] = useState('')
   const [description, setDescription] = useState('')
-  const [qty, setQty] = useState(0)
 
   useEffect(() => {
     if (item) {
       setName(item.name)
-      setUnit(item.unit ?? '')
       setDescription(item.description ?? '')
-      setQty(item.quantity)
     }
   }, [item])
 
@@ -291,14 +322,6 @@ function EditItemDialog({ item, onClose, onSaved, onError }) {
           <TextField label="SKU" value={item?.sku ?? ''} fullWidth disabled />
           <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
           <TextField
-            label="Quantity"
-            type="number"
-            value={qty}
-            onChange={(e) => setQty(Number(e.target.value))}
-            fullWidth
-          />
-          <TextField label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)} fullWidth />
-          <TextField
             label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -317,9 +340,7 @@ function EditItemDialog({ item, onClose, onSaved, onError }) {
             try {
               await updateItem(item.id, {
                 name,
-                unit,
                 description,
-                quantity: Number.isFinite(qty) ? qty : 0,
               })
               onSaved()
             } catch (e) {

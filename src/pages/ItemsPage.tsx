@@ -33,8 +33,6 @@ export default function ItemsPage() {
   const [sku, setSku] = useState('')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [qty, setQty] = useState<number>(0)
-  const [unit, setUnit] = useState('pcs')
 
   async function refresh() {
     setLoading(true)
@@ -76,14 +74,10 @@ export default function ItemsPage() {
         sku: cleanSku,
         name: cleanName,
         description: description.trim() ? description.trim() : undefined,
-        quantity: Number.isFinite(qty) ? qty : 0,
-        unit: unit.trim() ? unit.trim() : undefined,
       })
       setSku('')
       setName('')
       setDescription('')
-      setQty(0)
-      setUnit('pcs')
       await refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Create failed')
@@ -130,16 +124,6 @@ export default function ItemsPage() {
               />
               <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
             </Stack>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                label="Quantity"
-                type="number"
-                value={qty}
-                onChange={(e) => setQty(Number(e.target.value))}
-                fullWidth
-              />
-              <TextField label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)} fullWidth />
-            </Stack>
             <TextField
               label="Description (optional)"
               value={description}
@@ -155,8 +139,6 @@ export default function ItemsPage() {
                   setSku('')
                   setName('')
                   setDescription('')
-                  setQty(0)
-                  setUnit('pcs')
                 }}
               >
                 Clear
@@ -187,10 +169,6 @@ export default function ItemsPage() {
                 <TableRow>
                   <TableCell sx={{ fontWeight: 800 }}>SKU</TableCell>
                   <TableCell sx={{ fontWeight: 800 }}>Name</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }} align="right">
-                    Qty
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: 800 }}>Unit</TableCell>
                   <TableCell sx={{ fontWeight: 800 }}>Description</TableCell>
                   <TableCell sx={{ fontWeight: 800 }} align="right">
                     Actions
@@ -202,8 +180,6 @@ export default function ItemsPage() {
                   <TableRow key={it.id} hover>
                     <TableCell>{it.sku}</TableCell>
                     <TableCell>{it.name}</TableCell>
-                    <TableCell align="right">{it.quantity}</TableCell>
-                    <TableCell>{it.unit ?? ''}</TableCell>
                     <TableCell sx={{ maxWidth: 360, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {it.description ?? ''}
                     </TableCell>
@@ -259,16 +235,12 @@ function EditItemDialog(props: {
 }) {
   const open = Boolean(props.item)
   const [name, setName] = useState('')
-  const [unit, setUnit] = useState('')
   const [description, setDescription] = useState('')
-  const [qty, setQty] = useState<number>(0)
 
   useEffect(() => {
     if (props.item) {
       setName(props.item.name)
-      setUnit(props.item.unit ?? '')
       setDescription(props.item.description ?? '')
-      setQty(props.item.quantity)
     }
   }, [props.item])
 
@@ -290,14 +262,6 @@ function EditItemDialog(props: {
           <TextField label="SKU" value={props.item?.sku ?? ''} fullWidth disabled />
           <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
           <TextField
-            label="Quantity"
-            type="number"
-            value={qty}
-            onChange={(e) => setQty(Number(e.target.value))}
-            fullWidth
-          />
-          <TextField label="Unit" value={unit} onChange={(e) => setUnit(e.target.value)} fullWidth />
-          <TextField
             label="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -316,9 +280,7 @@ function EditItemDialog(props: {
             try {
               await updateItem(props.item.id, {
                 name,
-                unit,
                 description,
-                quantity: Number.isFinite(qty) ? qty : 0,
               })
               props.onSaved()
             } catch (e) {

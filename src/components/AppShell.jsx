@@ -1,9 +1,10 @@
 import { AppBar, Box, Container, Tab, Tabs, Toolbar, Typography } from '@mui/material'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useLocation } from 'react-router-dom'
 import harborBg from '../assets/harbor-bg.svg'
 
 export default function AppShell({ children }) {
-  const tab = '/'
+  const location = useLocation()
+  const tab = location.pathname.startsWith('/locations') ? '/locations' : '/'
 
   return (
     <Box
@@ -91,6 +92,7 @@ export default function AppShell({ children }) {
             }}
           >
             <Tab label="Items" value="/" component={RouterLink} to="/" />
+            <Tab label="Locations" value="/locations" component={RouterLink} to="/locations" />
           </Tabs>
         </Toolbar>
       </AppBar>

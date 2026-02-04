@@ -5,8 +5,7 @@ import harborBg from '../assets/harbor-bg.svg'
 
 export default function AppShell({ children }: PropsWithChildren) {
   const location = useLocation()
-
-  const tab = '/'
+  const tab = location.pathname.startsWith('/locations') ? '/locations' : '/'
 
   return (
     <Box
@@ -94,6 +93,7 @@ export default function AppShell({ children }: PropsWithChildren) {
             }}
           >
             <Tab label="Items" value="/" component={RouterLink} to="/" />
+            <Tab label="Locations" value="/locations" component={RouterLink} to="/locations" />
           </Tabs>
         </Toolbar>
       </AppBar>

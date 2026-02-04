@@ -9,8 +9,6 @@ export function createItem(body: {
   sku: string
   name: string
   description?: string
-  quantity: number
-  unit?: string
   locationId?: number
 }) {
   return apiFetch<Item>('/items', { method: 'POST', body: JSON.stringify(body) })
@@ -18,7 +16,7 @@ export function createItem(body: {
 
 export function updateItem(
   id: number,
-  body: { name?: string; description?: string; quantity?: number; unit?: string; locationId?: number },
+  body: { name?: string; description?: string; locationId?: number },
 ) {
   return apiFetch<Item>(`/items/${id}`, { method: 'PUT', body: JSON.stringify(body) })
 }
