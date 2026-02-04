@@ -51,6 +51,8 @@ if (Test-Path $pidFile) {
 
 Write-Host "Starting frontend on port $Port..." -ForegroundColor Cyan
 
+$env:BROWSER = "none"
+
 $proc = Start-Process -FilePath "npm" -ArgumentList @("run", "dev", "--", "--port", "$Port") -WorkingDirectory $PSScriptRoot -NoNewWindow -PassThru -RedirectStandardOutput $outLog -RedirectStandardError $errLog
 Set-Content -LiteralPath $pidFile -Value $proc.Id -Encoding ascii
 
