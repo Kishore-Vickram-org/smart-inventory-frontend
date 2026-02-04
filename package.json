@@ -4,11 +4,11 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "dev": "parcel serve public/index.html --port 5173 --open false",
+    "dev": "vite",
     "start": "npm run dev",
-    "build": "parcel build public/index.html --dist-dir build --public-url ./",
+    "build": "vite build",
     "lint": "eslint .",
-    "preview": "parcel serve public/index.html --dist-dir build --port 5173 --open false"
+    "preview": "vite preview"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -16,10 +16,11 @@
     "react-router-dom": "^6.28.0"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
     "@eslint/js": "^9.39.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "globals": "^16.5.0",
-    "parcel": "^2.14.4"
+    "vite": "^5.4.14"
   }
 }

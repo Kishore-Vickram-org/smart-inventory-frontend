@@ -2,7 +2,11 @@ const defaultBaseSameOrigin = '/api'
 const defaultBaseLocalDev = 'http://localhost:8081/api'
 
 function baseUrl() {
-  const env = (globalThis?.process?.env?.REACT_APP_API_BASE_URL ?? '').toString()
+  const env = (
+    import.meta?.env?.VITE_API_BASE_URL ??
+    globalThis?.process?.env?.REACT_APP_API_BASE_URL ??
+    ''
+  ).toString()
   if (env.trim().length > 0) return env.replace(/\/$/, '')
 
   // In local dev we call the backend directly (no proxy).
