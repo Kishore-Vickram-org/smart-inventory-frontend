@@ -1,25 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Snackbar,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material'
 import { createItem, deleteItem, listItems, updateItem } from '../api/inventoryApi'
 
 export default function ItemsPage() {
@@ -28,7 +7,7 @@ export default function ItemsPage() {
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
 
-  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' })
+  const [toast, setToast] = useState(null)
 
   const [editItem, setEditItem] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -82,58 +61,71 @@ export default function ItemsPage() {
       setName('')
       setDescription('')
       await refresh()
-      setToast({ open: true, message: 'Item created', severity: 'success' })
+      setToast('Item created')
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Create failed')
     }
   }
 
   return (
-    <Stack spacing={2}>
-      <Card
-        variant="outlined"
-        sx={{
-          borderRadius: 3,
-          background:
-            'linear-gradient(135deg, rgba(11,92,171,0.12), rgba(15,118,110,0.10) 55%, rgba(255,255,255,0.65))',
-        }}
-      >
-        <CardContent>
-          <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: 0.2 }}>
-            Items
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Simple CRUD: create, list, edit, delete.
-          </Typography>
-          <Stack spacing={2} sx={{ mt: 2 }}>
-            <TextField
-              label="Search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              fullWidth
-              placeholder="Search by SKU, name, description…"
-            />
+    <div className="page">
+      <div className="hero">
+        <div>
+          <h1 className="hero__title">Items</h1>
+          <p className="hero__subtitle">Create • Read • Update • Delete</p>
+        </div>
+      </div>
 
-            <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
-              Add Item
-            </Typography>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField
-                label="SKU"
-                value={sku}
-                onChange={(e) => setSku(e.target.value)}
-                onBlur={() => setSku((s) => s.trim())}
-                helperText="Unique value (e.g. STEEL-001)"
-                fullWidth
+      {error ? <div className="alert alert--error">{error}</div> : null}
+      {loading ? <div className="alert">Loading…</div> : null}
+
+      <div className="grid">
+        <section className="card">
+          <div className="card__head">
+            <h2 className="card__title">Add Item</h2>
+            <div className="card__tools">
+              <input
+                className="input"
+                placeholder="Search…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
               />
-              <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-            </Stack>
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-              <TextField label="Description (optional)" value={description} onChange={(e) => setDescription(e.target.value)} fullWidth />
-            </Stack>
-            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
-              <Button
-                variant="outlined"
+            </div>
+          </div>
+
+          <div className="form">
+            <div className="form__row">
+              <label className="label">
+                SKU
+                <input
+                  className="input"
+                  value={sku}
+                  onChange={(e) => setSku(e.target.value)}
+                  onBlur={() => setSku((s) => s.trim())}
+                  placeholder="e.g. STEEL-001"
+                />
+              </label>
+              <label className="label">
+                Name
+                <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" />
+              </label>
+            </div>
+
+            <label className="label">
+              Description (optional)
+              <textarea
+                className="input"
+                rows={3}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Short description…"
+              />
+            </label>
+
+            <div className="actions">
+              <button
+                className="btn btn--ghost"
+                type="button"
                 onClick={() => {
                   setSku('')
                   setName('')
@@ -141,216 +133,186 @@ export default function ItemsPage() {
                 }}
               >
                 Clear
-              </Button>
-              <Button variant="contained" onClick={handleCreate} disabled={loading}>
+              </button>
+              <button className="btn" type="button" onClick={handleCreate} disabled={loading}>
                 Create
-              </Button>
-            </Box>
-          </Stack>
-        </CardContent>
-      </Card>
+              </button>
+            </div>
+          </div>
+        </section>
 
-      {error && <Alert severity="error">{error}</Alert>}
-      {loading && <Alert severity="info">Loading…</Alert>}
+        <section className="card">
+          <div className="card__head">
+            <h2 className="card__title">Item List</h2>
+            <div className="muted">{filteredItems.length} item(s)</div>
+          </div>
 
-      <Card variant="outlined" sx={{ borderRadius: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 900 }}>
-            Item List
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {filteredItems.length} item(s)
-          </Typography>
-
-          <TableContainer sx={{ mt: 2 }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 800 }}>SKU</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }}>Name</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }}>Description</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }} align="right">
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
+          <div className="tableWrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>SKU</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th className="right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
                 {filteredItems.map((it) => (
-                  <TableRow key={it.id} hover>
-                    <TableCell>{it.sku}</TableCell>
-                    <TableCell>{it.name}</TableCell>
-                    <TableCell
-                      sx={{
-                        maxWidth: 360,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
+                  <tr key={it.id}>
+                    <td className="mono">{it.sku}</td>
+                    <td>{it.name}</td>
+                    <td className="ellipsis" title={it.description ?? ''}>
                       {it.description ?? ''}
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: 'inline-flex', gap: 1 }}>
-                        <Button size="small" variant="outlined" onClick={() => setEditItem(it)}>
+                    </td>
+                    <td className="right">
+                      <div className="rowActions">
+                        <button className="btn btn--small btn--ghost" type="button" onClick={() => setEditItem(it)}>
                           Edit
-                        </Button>
-                        <Button
-                          size="small"
-                          color="error"
-                          variant="outlined"
-                          onClick={() => setDeleteTarget(it)}
-                        >
+                        </button>
+                        <button className="btn btn--small btn--danger" type="button" onClick={() => setDeleteTarget(it)}>
                           Delete
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
 
-      <EditItemDialog
-        item={editItem}
-        onClose={() => setEditItem(null)}
-        onSaved={async () => {
-          setEditItem(null)
-          await refresh()
-          setToast({ open: true, message: 'Item updated', severity: 'success' })
-        }}
-        onError={(m) => setError(m)}
-      />
-
-      <ConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Delete item?"
-        description={deleteTarget ? `This will permanently delete “${deleteTarget.sku}”.` : ''}
-        confirmText="Delete"
-        confirmColor="error"
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => {
-          if (!deleteTarget) return
-          setError(null)
-          try {
-            await deleteItem(deleteTarget.id)
-            setDeleteTarget(null)
+      <Modal open={Boolean(editItem)} title="Edit Item" onClose={() => setEditItem(null)}>
+        <EditItemForm
+          item={editItem}
+          onCancel={() => setEditItem(null)}
+          onError={setError}
+          onSaved={async () => {
+            setEditItem(null)
             await refresh()
-            setToast({ open: true, message: 'Item deleted', severity: 'success' })
-          } catch (e) {
-            setError(e instanceof Error ? e.message : 'Delete failed')
-          }
-        }}
-      />
+            setToast('Item updated')
+          }}
+        />
+      </Modal>
 
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={2400}
-        onClose={() => setToast((t) => ({ ...t, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setToast((t) => ({ ...t, open: false }))}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ borderRadius: 2 }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
-    </Stack>
+      <Modal open={Boolean(deleteTarget)} title="Delete item?" onClose={() => setDeleteTarget(null)}>
+        <p className="muted">This will permanently delete “{deleteTarget?.sku}”.</p>
+        <div className="actions">
+          <button className="btn btn--ghost" type="button" onClick={() => setDeleteTarget(null)}>
+            Cancel
+          </button>
+          <button
+            className="btn btn--danger"
+            type="button"
+            onClick={async () => {
+              if (!deleteTarget) return
+              setError(null)
+              try {
+                await deleteItem(deleteTarget.id)
+                setDeleteTarget(null)
+                await refresh()
+                setToast('Item deleted')
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Delete failed')
+              }
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </Modal>
+
+      <Toast message={toast} onClose={() => setToast(null)} />
+    </div>
   )
 }
 
-function ConfirmDialog({ open, title, description, confirmText, confirmColor, onConfirm, onClose }) {
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-      slotProps={{
-        backdrop: {
-          sx: { backdropFilter: 'blur(8px)', backgroundColor: 'rgba(2,6,23,0.28)' },
-        },
-      }}
-    >
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" color={confirmColor ?? 'primary'} onClick={onConfirm}>
-          {confirmText ?? 'Confirm'}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
-
-function EditItemDialog({ item, onClose, onSaved, onError }) {
-  const open = Boolean(item)
+function EditItemForm({ item, onCancel, onSaved, onError }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
 
   useEffect(() => {
     if (item) {
-      setName(item.name)
+      setName(item.name ?? '')
       setDescription(item.description ?? '')
     }
   }, [item])
 
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="sm"
-      slotProps={{
-        backdrop: {
-          sx: { backdropFilter: 'blur(8px)', backgroundColor: 'rgba(2,6,23,0.28)' },
-        },
+    <form
+      className="form"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        if (!item) return
+        try {
+          await updateItem(item.id, { name: name.trim(), description: description.trim() ? description.trim() : undefined })
+          onSaved()
+        } catch (err) {
+          onError(err instanceof Error ? err.message : 'Update failed')
+        }
       }}
     >
-      <DialogTitle>Edit Item</DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField label="SKU" value={item?.sku ?? ''} fullWidth disabled />
-          <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-          <TextField
-            label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            fullWidth
-            multiline
-            minRows={2}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          onClick={async () => {
-            if (!item) return
-            try {
-              await updateItem(item.id, {
-                name,
-                description,
-              })
-              onSaved()
-            } catch (e) {
-              onError(e instanceof Error ? e.message : 'Update failed')
-            }
-          }}
-        >
+      <div className="form__row">
+        <label className="label">
+          SKU
+          <input className="input" value={item?.sku ?? ''} disabled />
+        </label>
+        <label className="label">
+          Name
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
+        </label>
+      </div>
+
+      <label className="label">
+        Description
+        <textarea className="input" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
+      </label>
+
+      <div className="actions">
+        <button className="btn btn--ghost" type="button" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="btn" type="submit">
           Save
-        </Button>
-      </DialogActions>
-    </Dialog>
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function Modal({ open, title, children, onClose }) {
+  if (!open) return null
+  return (
+    <div className="modal" role="dialog" aria-modal="true">
+      <button className="modal__backdrop" type="button" onClick={onClose} aria-label="Close" />
+      <div className="modal__panel">
+        <div className="modal__head">
+          <div className="modal__title">{title}</div>
+          <button className="btn btn--small btn--ghost" type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Toast({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return
+    const t = setTimeout(onClose, 2200)
+    return () => clearTimeout(t)
+  }, [message, onClose])
+
+  if (!message) return null
+  return (
+    <div className="toast" role="status" aria-live="polite">
+      {message}
+      <button className="toast__close" type="button" onClick={onClose} aria-label="Close">
+        ×
+      </button>
+    </div>
   )
 }

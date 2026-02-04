@@ -1,29 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  Snackbar,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material'
 import { createLocation, deleteLocation, listLocations, updateLocation } from '../api/inventoryApi'
 
 const LOCATION_TYPES = ['DOCK', 'YARD', 'WAREHOUSE', 'ZONE', 'AISLE', 'BIN']
@@ -38,7 +13,7 @@ export default function LocationsPage() {
   const [editLocation, setEditLocation] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
 
-  const [toast, setToast] = useState({ open: false, message: '', severity: 'success' })
+  const [toast, setToast] = useState(null)
 
   async function refresh() {
     setLoading(true)
@@ -66,307 +41,249 @@ export default function LocationsPage() {
   }, [locations, query])
 
   return (
-    <Stack spacing={2}>
-      <Card
-        variant="outlined"
-        sx={{
-          borderRadius: 3,
-          background:
-            'linear-gradient(135deg, rgba(99,102,241,0.10), rgba(11,92,171,0.10) 55%, rgba(255,255,255,0.65))',
-        }}
-      >
-        <CardContent>
-          <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: 0.2 }} noWrap>
-                Locations
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                Simple CRUD: create, list, edit, delete.
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 1 }}>
-                Total: {locations.length}
-              </Typography>
-            </Box>
+    <div className="page">
+      <div className="hero">
+        <div>
+          <h1 className="hero__title">Locations</h1>
+          <p className="hero__subtitle">Create • Read • Update • Delete</p>
+        </div>
+        <div className="hero__actions">
+          <button className="btn" type="button" onClick={() => setCreateOpen(true)}>
+            Add Location
+          </button>
+        </div>
+      </div>
 
-            <Button variant="contained" onClick={() => setCreateOpen(true)} sx={{ minWidth: 160 }}>
-              Add Location
-            </Button>
-          </Box>
+      {error ? <div className="alert alert--error">{error}</div> : null}
+      {loading ? <div className="alert">Loading…</div> : null}
 
-          <TextField
-            label="Search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            fullWidth
-            placeholder="Search by code, name, type…"
-            sx={{ mt: 2 }}
-          />
-        </CardContent>
-      </Card>
+      <section className="card">
+        <div className="card__head">
+          <h2 className="card__title">Location List</h2>
+          <div className="card__tools">
+            <input
+              className="input"
+              placeholder="Search…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <div className="muted">{filteredLocations.length} location(s)</div>
+          </div>
+        </div>
 
-      {error && <Alert severity="error">{error}</Alert>}
-      {loading && <Alert severity="info">Loading…</Alert>}
+        <div className="tableWrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Name</th>
+                <th>Type</th>
+                <th className="right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredLocations.map((l) => (
+                <tr key={l.id}>
+                  <td className="mono">{l.code}</td>
+                  <td>{l.name}</td>
+                  <td>
+                    <span className="badge">{l.type}</span>
+                  </td>
+                  <td className="right">
+                    <div className="rowActions">
+                      <button className="btn btn--small btn--ghost" type="button" onClick={() => setEditLocation(l)}>
+                        Edit
+                      </button>
+                      <button className="btn btn--small btn--danger" type="button" onClick={() => setDeleteTarget(l)}>
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
-      <Card variant="outlined" sx={{ borderRadius: 3 }}>
-        <CardContent>
-          <Typography variant="h6" sx={{ fontWeight: 900 }}>
-            Location List
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            {filteredLocations.length} location(s)
-          </Typography>
-
-          <TableContainer sx={{ mt: 2 }}>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 800 }}>Code</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }}>Name</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }}>Type</TableCell>
-                  <TableCell sx={{ fontWeight: 800 }} align="right">
-                    Actions
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredLocations.map((l) => (
-                  <TableRow key={l.id} hover>
-                    <TableCell>{l.code}</TableCell>
-                    <TableCell>{l.name}</TableCell>
-                    <TableCell>{l.type}</TableCell>
-                    <TableCell align="right">
-                      <Box sx={{ display: 'inline-flex', gap: 1 }}>
-                        <Button size="small" variant="outlined" onClick={() => setEditLocation(l)}>
-                          Edit
-                        </Button>
-                        <Button size="small" color="error" variant="outlined" onClick={() => setDeleteTarget(l)}>
-                          Delete
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </CardContent>
-      </Card>
-
-      <CreateLocationDialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onCreated={async () => {
-          setCreateOpen(false)
-          await refresh()
-          setToast({ open: true, message: 'Location created', severity: 'success' })
-        }}
-        onError={(m) => setError(m)}
-      />
-
-      <EditLocationDialog
-        location={editLocation}
-        onClose={() => setEditLocation(null)}
-        onSaved={async () => {
-          setEditLocation(null)
-          await refresh()
-          setToast({ open: true, message: 'Location updated', severity: 'success' })
-        }}
-        onError={(m) => setError(m)}
-      />
-
-      <ConfirmDialog
-        open={Boolean(deleteTarget)}
-        title="Delete location?"
-        description={deleteTarget ? `This will permanently delete “${deleteTarget.code}”.` : ''}
-        confirmText="Delete"
-        confirmColor="error"
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={async () => {
-          if (!deleteTarget) return
-          setError(null)
-          try {
-            await deleteLocation(deleteTarget.id)
-            setDeleteTarget(null)
+      <Modal open={createOpen} title="Add Location" onClose={() => setCreateOpen(false)}>
+        <LocationForm
+          mode="create"
+          location={null}
+          onCancel={() => setCreateOpen(false)}
+          onError={setError}
+          onSaved={async () => {
+            setCreateOpen(false)
             await refresh()
-            setToast({ open: true, message: 'Location deleted', severity: 'success' })
-          } catch (e) {
-            setError(e instanceof Error ? e.message : 'Delete failed')
-          }
-        }}
-      />
+            setToast('Location created')
+          }}
+        />
+      </Modal>
 
-      <Snackbar
-        open={toast.open}
-        autoHideDuration={2400}
-        onClose={() => setToast((t) => ({ ...t, open: false }))}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert
-          onClose={() => setToast((t) => ({ ...t, open: false }))}
-          severity={toast.severity}
-          variant="filled"
-          sx={{ borderRadius: 2 }}
-        >
-          {toast.message}
-        </Alert>
-      </Snackbar>
-    </Stack>
+      <Modal open={Boolean(editLocation)} title="Edit Location" onClose={() => setEditLocation(null)}>
+        <LocationForm
+          mode="edit"
+          location={editLocation}
+          onCancel={() => setEditLocation(null)}
+          onError={setError}
+          onSaved={async () => {
+            setEditLocation(null)
+            await refresh()
+            setToast('Location updated')
+          }}
+        />
+      </Modal>
+
+      <Modal open={Boolean(deleteTarget)} title="Delete location?" onClose={() => setDeleteTarget(null)}>
+        <p className="muted">This will permanently delete “{deleteTarget?.code}”.</p>
+        <div className="actions">
+          <button className="btn btn--ghost" type="button" onClick={() => setDeleteTarget(null)}>
+            Cancel
+          </button>
+          <button
+            className="btn btn--danger"
+            type="button"
+            onClick={async () => {
+              if (!deleteTarget) return
+              setError(null)
+              try {
+                await deleteLocation(deleteTarget.id)
+                setDeleteTarget(null)
+                await refresh()
+                setToast('Location deleted')
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Delete failed')
+              }
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      </Modal>
+
+      <Toast message={toast} onClose={() => setToast(null)} />
+    </div>
   )
 }
 
-function CreateLocationDialog({ open, onClose, onCreated, onError }) {
+function LocationForm({ mode, location, onCancel, onSaved, onError }) {
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
   const [type, setType] = useState('WAREHOUSE')
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (open) {
+    if (mode === 'edit' && location) {
+      setCode(location.code ?? '')
+      setName(location.name ?? '')
+      setType(location.type ?? 'WAREHOUSE')
+    }
+    if (mode === 'create') {
       setCode('')
       setName('')
       setType('WAREHOUSE')
-      setSaving(false)
     }
-  }, [open])
+  }, [mode, location])
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Add Location</DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField label="Code" value={code} onChange={(e) => setCode(e.target.value)} fullWidth />
-          <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-          <FormControl fullWidth size="small">
-            <InputLabel>Type</InputLabel>
-            <Select label="Type" value={type} onChange={(e) => setType(String(e.target.value))}>
-              {LOCATION_TYPES.map((t) => (
-                <MenuItem key={t} value={t}>
-                  {t}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          disabled={saving}
-          onClick={async () => {
-            const cleanCode = code.trim()
-            const cleanName = name.trim()
-            if (!cleanCode || !cleanName) {
-              onError('Code and Name are required')
-              return
-            }
-            setSaving(true)
-            try {
-              await createLocation({ code: cleanCode, name: cleanName, type })
-              onCreated()
-            } catch (e) {
-              onError(e instanceof Error ? e.message : 'Create failed')
-            } finally {
-              setSaving(false)
-            }
-          }}
-        >
-          Create
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
+    <form
+      className="form"
+      onSubmit={async (e) => {
+        e.preventDefault()
+        const cleanCode = code.trim()
+        const cleanName = name.trim()
+        if (mode === 'create' && (!cleanCode || !cleanName)) {
+          onError('Code and Name are required')
+          return
+        }
+        if (mode === 'edit' && !cleanName) {
+          onError('Name is required')
+          return
+        }
 
-function EditLocationDialog({ location, onClose, onSaved, onError }) {
-  const open = Boolean(location)
-  const [name, setName] = useState('')
-  const [type, setType] = useState('WAREHOUSE')
-  const [saving, setSaving] = useState(false)
-
-  useEffect(() => {
-    if (location) {
-      setName(location.name ?? '')
-      setType(location.type ?? 'WAREHOUSE')
-      setSaving(false)
-    }
-  }, [location])
-
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Edit Location</DialogTitle>
-      <DialogContent sx={{ pt: 2 }}>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <TextField label="Code" value={location?.code ?? ''} fullWidth disabled />
-          <TextField label="Name" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
-          <FormControl fullWidth size="small">
-            <InputLabel>Type</InputLabel>
-            <Select label="Type" value={type} onChange={(e) => setType(String(e.target.value))}>
-              {LOCATION_TYPES.map((t) => (
-                <MenuItem key={t} value={t}>
-                  {t}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          variant="contained"
-          disabled={saving}
-          onClick={async () => {
-            if (!location) return
-            const cleanName = name.trim()
-            if (!cleanName) {
-              onError('Name is required')
-              return
-            }
-            setSaving(true)
-            try {
-              await updateLocation(location.id, { name: cleanName, type })
-              onSaved()
-            } catch (e) {
-              onError(e instanceof Error ? e.message : 'Update failed')
-            } finally {
-              setSaving(false)
-            }
-          }}
-        >
-          Save
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
-
-function ConfirmDialog({ open, title, description, confirmText, confirmColor, onConfirm, onClose }) {
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      fullWidth
-      maxWidth="xs"
-      slotProps={{
-        backdrop: {
-          sx: { backdropFilter: 'blur(8px)', backgroundColor: 'rgba(2,6,23,0.28)' },
-        },
+        try {
+          if (mode === 'create') {
+            await createLocation({ code: cleanCode, name: cleanName, type })
+          } else {
+            await updateLocation(location.id, { name: cleanName, type })
+          }
+          onSaved()
+        } catch (err) {
+          onError(err instanceof Error ? err.message : 'Save failed')
+        }
       }}
     >
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent sx={{ pt: 1 }}>
-        <Typography variant="body2" color="text.secondary">
-          {description}
-        </Typography>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" color={confirmColor ?? 'primary'} onClick={onConfirm}>
-          {confirmText ?? 'Confirm'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      <div className="form__row">
+        <label className="label">
+          Code
+          <input
+            className="input"
+            value={mode === 'edit' ? (location?.code ?? '') : code}
+            onChange={(e) => setCode(e.target.value)}
+            disabled={mode === 'edit'}
+            placeholder="e.g. WH-1"
+          />
+        </label>
+        <label className="label">
+          Name
+          <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Warehouse 1" />
+        </label>
+      </div>
+
+      <label className="label">
+        Type
+        <select className="input" value={type} onChange={(e) => setType(e.target.value)}>
+          {LOCATION_TYPES.map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <div className="actions">
+        <button className="btn btn--ghost" type="button" onClick={onCancel}>
+          Cancel
+        </button>
+        <button className="btn" type="submit">
+          {mode === 'create' ? 'Create' : 'Save'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function Modal({ open, title, children, onClose }) {
+  if (!open) return null
+  return (
+    <div className="modal" role="dialog" aria-modal="true">
+      <button className="modal__backdrop" type="button" onClick={onClose} aria-label="Close" />
+      <div className="modal__panel">
+        <div className="modal__head">
+          <div className="modal__title">{title}</div>
+          <button className="btn btn--small btn--ghost" type="button" onClick={onClose}>
+            Close
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function Toast({ message, onClose }) {
+  useEffect(() => {
+    if (!message) return
+    const t = setTimeout(onClose, 2200)
+    return () => clearTimeout(t)
+  }, [message, onClose])
+
+  if (!message) return null
+  return (
+    <div className="toast" role="status" aria-live="polite">
+      {message}
+      <button className="toast__close" type="button" onClick={onClose} aria-label="Close">
+        ×
+      </button>
+    </div>
   )
 }
