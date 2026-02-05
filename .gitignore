@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Tool caches / runtime artifacts
+.parcel-cache/
+.frontend.pid
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
