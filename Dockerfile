@@ -1,5 +1,6 @@
-# Build React app
-FROM node:18-alpine AS build
+# React dev server (Create React App)
+FROM node:18-alpine
+
 WORKDIR /app
 
 COPY package*.json ./
@@ -7,15 +8,12 @@ RUN npm ci
 
 COPY . .
 
-# In Docker we prefer same-origin /api and let nginx proxy to backend.
-ENV REACT_APP_API_BASE_URL=/api
-RUN npm run build
+ENV HOST=0.0.0.0 \
+	PORT=3000 \
+	BROWSER=none \
+	CHOKIDAR_USEPOLLING=true \
+	WATCHPACK_POLLING=true
 
-# Serve with nginx + proxy /api to backend
-FROM nginx:alpine
+EXPOSE 3000
 
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/build /usr/share/nginx/html
-
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "start"]
