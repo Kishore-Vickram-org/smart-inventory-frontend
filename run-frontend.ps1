@@ -13,7 +13,7 @@ function Test-Http([string]$Url) {
   }
 }
 
-$rootUrl = "http://localhost:$Port/"
+$rootUrl = "http://127.0.0.1:$Port/"
 if (Test-Http $rootUrl) {
   Write-Host "Frontend already running on $rootUrl" -ForegroundColor Green
   exit 0
@@ -21,7 +21,7 @@ if (Test-Http $rootUrl) {
 
 $listen = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Listen' }
 if ($listen) {
-  for ($i = 0; $i -lt 15; $i++) {
+  for ($i = 0; $i -lt 30; $i++) {
     Start-Sleep -Seconds 1
     if (Test-Http $rootUrl) {
       Write-Host "Frontend became ready on $rootUrl" -ForegroundColor Green
@@ -53,13 +53,22 @@ Write-Host "Starting frontend on port $Port..." -ForegroundColor Cyan
 
 $env:BROWSER = "none"
 
+# Reduce noisy (non-fatal) Node deprecation warnings in dev output.
+if ($env:NODE_OPTIONS) {
+  if (-not ($env:NODE_OPTIONS -match '(^|\s)--no-deprecation(\s|$)')) {
+    $env:NODE_OPTIONS = "$($env:NODE_OPTIONS) --no-deprecation"
+  }
+} else {
+  $env:NODE_OPTIONS = "--no-deprecation"
+}
+
 # Create React App uses PORT env var.
 $env:PORT = "$Port"
 
 $proc = Start-Process -FilePath "npm" -ArgumentList @("start") -WorkingDirectory $PSScriptRoot -NoNewWindow -PassThru -RedirectStandardOutput $outLog -RedirectStandardError $errLog
 Set-Content -LiteralPath $pidFile -Value $proc.Id -Encoding ascii
 
-for ($i = 0; $i -lt 30; $i++) {
+for ($i = 0; $i -lt 120; $i++) {
   Start-Sleep -Seconds 1
   if (Test-Http $rootUrl) {
     Write-Host "Frontend ready on $rootUrl (PID $($proc.Id))" -ForegroundColor Green
@@ -67,6 +76,16 @@ for ($i = 0; $i -lt 30; $i++) {
   }
 
   if ($proc.HasExited) {
+    # Sometimes the parent npm process can exit while the dev server keeps running.
+    # Treat the frontend as ready if the port is listening and responds.
+    $listenNow = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | Where-Object { $_.State -eq 'Listen' }
+    if ($listenNow -and (Test-Http $rootUrl)) {
+      $owningPid = $listenNow | Select-Object -First 1 -ExpandProperty OwningProcess
+      Set-Content -LiteralPath $pidFile -Value $owningPid -Encoding ascii
+      Write-Host "Frontend ready on $rootUrl (PID $owningPid)" -ForegroundColor Green
+      exit 0
+    }
+
     Write-Host "Frontend process exited early (code $($proc.ExitCode))." -ForegroundColor Red
     if (Test-Path $errLog) {
       Write-Host "--- frontend.err.log (tail) ---" -ForegroundColor DarkGray
@@ -76,5 +95,13 @@ for ($i = 0; $i -lt 30; $i++) {
   }
 }
 
-Write-Host "Frontend did not become ready within 30 seconds on $rootUrl." -ForegroundColor Red
+Write-Host "Frontend did not become ready within 120 seconds on $rootUrl." -ForegroundColor Red
+if (Test-Path $outLog) {
+  Write-Host "--- frontend.log (tail) ---" -ForegroundColor DarkGray
+  Get-Content -LiteralPath $outLog -Tail 40
+}
+if (Test-Path $errLog) {
+  Write-Host "--- frontend.err.log (tail) ---" -ForegroundColor DarkGray
+  Get-Content -LiteralPath $errLog -Tail 60
+}
 exit 1

@@ -1,12 +1,24 @@
 const defaultBaseSameOrigin = '/api'
-const defaultBaseLocalDev = 'http://localhost:8081/api'
+const defaultBaseLocalDev = 'http://127.0.0.1:8080/api'
 
 function baseUrl() {
   const env = (
     (typeof process !== 'undefined' && process?.env?.REACT_APP_API_BASE_URL) ??
     ''
   ).toString()
-  if (env.trim().length > 0) return env.replace(/\/$/, '')
+
+  const normalized = env.trim()
+
+  // Some environments accidentally inject placeholders like "false".
+  // Treat these as "not set" so local dev can fall back correctly.
+  if (
+    normalized.length > 0 &&
+    normalized.toLowerCase() !== 'false' &&
+    normalized.toLowerCase() !== 'null' &&
+    normalized.toLowerCase() !== 'undefined'
+  ) {
+    return normalized.replace(/\/$/, '')
+  }
 
   // In local dev we call the backend directly (no proxy).
   if (typeof window !== 'undefined') {
@@ -20,13 +32,28 @@ function baseUrl() {
 }
 
 export async function apiFetch(path, init) {
-  const res = await fetch(`${baseUrl()}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
-    ...init,
-  })
+  const apiBase = baseUrl()
+  let res
+  try {
+    res = await fetch(`${apiBase}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(init?.headers ?? {}),
+      },
+      ...init,
+    })
+  } catch (err) {
+    // Browser network/CORS failures surface as TypeError("Failed to fetch").
+    const msg = err instanceof Error ? err.message : String(err)
+    throw new Error(
+      [
+        msg || 'Failed to fetch',
+        `Requested: ${path}`,
+        `API base: ${apiBase}`,
+        'Check that the backend is running and reachable, and that CORS allows this origin.',
+      ].join('\n'),
+    )
+  }
 
   if (!res.ok) {
     const contentType = res.headers.get('content-type') ?? ''

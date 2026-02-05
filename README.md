@@ -20,7 +20,7 @@ Frontend URL: `http://localhost:5173`
 
 ## Backend API
 
-During development, the frontend calls the backend directly at `http://localhost:8081/api` by default.
+During development, the frontend calls the backend directly at `http://localhost:8080/api` by default.
 
 You can override that by setting `REACT_APP_API_BASE_URL`.
 
@@ -40,5 +40,5 @@ Notes:
 If you want to point the UI at a different backend (without proxy), create an `.env` file:
 
 ```env
-REACT_APP_API_BASE_URL=http://localhost:8081/api
+REACT_APP_API_BASE_URL=http://localhost:8080/api
 ```
