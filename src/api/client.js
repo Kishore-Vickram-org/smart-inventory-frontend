@@ -59,7 +59,8 @@ export async function apiFetch(path, init) {
     const contentType = res.headers.get('content-type') ?? ''
     const text = await res.text()
 
-    if (contentType.includes('application/json') && text) {
+    // Spring may return application/problem+json; treat all *json* as JSON.
+    if (contentType.toLowerCase().includes('json') && text) {
       try {
         const data = JSON.parse(text)
         if (typeof data?.message === 'string' && data.message.trim().length > 0) {
@@ -67,6 +68,14 @@ export async function apiFetch(path, init) {
         }
         if (typeof data?.error === 'string' && data.error.trim().length > 0) {
           throw new Error(data.error)
+        }
+
+        // RFC7807 / ProblemDetail-style payloads
+        if (typeof data?.detail === 'string' && data.detail.trim().length > 0) {
+          throw new Error(data.detail)
+        }
+        if (typeof data?.title === 'string' && data.title.trim().length > 0) {
+          throw new Error(data.title)
         }
       } catch {
         // fall through to raw text
@@ -97,7 +106,9 @@ export async function apiFetch(path, init) {
   }
 
   if (!contentType.includes('application/json')) {
-    throw new Error(`Expected JSON but got content-type: ${contentType || '(unknown)'}`)
+    if (!contentType.toLowerCase().includes('json')) {
+      throw new Error(`Expected JSON but got content-type: ${contentType || '(unknown)'}`)
+    }
   }
 
   return JSON.parse(text)
