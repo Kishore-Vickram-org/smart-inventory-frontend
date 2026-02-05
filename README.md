@@ -14,7 +14,7 @@ npm install
 npm start
 ```
 
-Frontend URL: `http://localhost:5173`
+Frontend URL: `http://localhost:3000`
 
 `npm start` also works (it’s an alias for the dev server).
 
