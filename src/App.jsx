@@ -7,8 +7,8 @@ export default function App() {
   return (
     <AppShell>
       <Routes>
-        <Route path="/" element={<ItemsPage />} />
-        <Route path="/locations" element={<LocationsPage />} />
+         <Route path="/" element={<ItemsPage />} />
+         <Route path="/locations" element={<LocationsPage />} />
       </Routes>
     </AppShell>
   )
