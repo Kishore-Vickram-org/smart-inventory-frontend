@@ -103,3 +103,7 @@ If you fork/host the backend elsewhere, update the rewrite destination in:
 ## Screenshots
 
 ![Alt text]_(https://github.com/kishorevic12/smart-inventory-frontend/blob/main/Screenshot%20(496).png)
+
+## Presentation
+
+[Download Project PPT]_(https://github.com/kishorevic12/smart-inventory-frontend/blob/main/Smart-Harbor-Inventory-System.pptx)
