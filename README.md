@@ -100,4 +100,13 @@ If you fork/host the backend elsewhere, update the rewrite destination in:
 - Use unique SKUs/codes when testing.
 - If needed, reset the backend database and retry.
 
+## 📸 Screenshots
+
+![Screenshot 1](frontend1.png.png)
+![Screenshot 2](frontend2.png.png)
+![Screenshot 3](frontend3.png.png)
+![Screenshot 4](frontend4.png.png)
+![Screenshot 5](frontend5.png.png)
+Add screenshots to README
+
  
