@@ -100,23 +100,4 @@ If you fork/host the backend elsewhere, update the rewrite destination in:
 - Use unique SKUs/codes when testing.
 - If needed, reset the backend database and retry.
 
-  ## 📸 Screenshots
-
-### Screen 1
-![Screen 1](screenshots/frontend1.png.png)
-
-### Screen 2
-![Screen 2](screenshots/frontend2.png.png)
-
-### Screen 3
-![Screen 3](screenshots/frontend3.png.png)
-
-### Screen 4
-![Screen 4](screenshots/frontend4.png.png)
-
-### Screen 5
-![Screen 5](screenshots/frontend5.png.png)
-
-
-
-![Alt text]_(https://github.com/kishorevic12/smart-inventory-frontend/blob/main/Screenshot%20(496).png)
+ 
