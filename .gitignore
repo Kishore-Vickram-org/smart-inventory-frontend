@@ -25,9 +25,4 @@ node_modules
 *.sln
 *.sw?
 
-node_modules
-dist
-.git
-.gitignore
-Dockerfile
-README.md
+
