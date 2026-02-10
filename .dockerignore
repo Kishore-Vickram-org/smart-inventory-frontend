@@ -1,6 +1,23 @@
+# dependencies
 node_modules/
+
+# build outputs
+dist/
 build/
+
+# caches & runtime files
 .parcel-cache/
-frontend.log
-frontend.err.log
 .frontend.pid
+
+# logs
+*.log
+
+# git & editor files
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# env files
+.env
+.env.*
