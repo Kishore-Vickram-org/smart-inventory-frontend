@@ -107,3 +107,6 @@ If you fork/host the backend elsewhere, update the rewrite destination in:
 ## Presentation
 
 [Download Project PPT]_(https://github.com/kishorevic12/smart-inventory-frontend/blob/main/Smart-Harbor-Inventory-System.pptx)
+
+## Frontend Link
+https://smart-inventory-harbor.vercel.app/
