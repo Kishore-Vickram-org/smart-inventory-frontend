@@ -1,5 +1,6 @@
 {
   "name": "harbor-inventory-frontend",
+  "homepage": "https://kishore-vickram-org.github.io/smart-inventory-frontend/",
   "private": true,
   "version": "0.0.1",
   "engines": {
@@ -8,6 +9,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist",
     "postinstall": "npm run build",
     "preview": "vite preview --host 0.0.0.0 --port 8080 --strictPort",
     "start": "npm run preview"
@@ -31,5 +34,8 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
