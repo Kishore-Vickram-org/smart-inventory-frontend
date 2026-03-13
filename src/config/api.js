@@ -54,7 +54,21 @@ function computeApiBaseUrl() {
   ).toString()
 
   const normalizedEnv = normalizeApiBase(env)
-  if (normalizedEnv) return normalizedEnv
+  if (normalizedEnv) {
+    // If someone sets API base to a relative path (e.g. "/api"), GitHub Pages will
+    // return the SPA 404.html, not your backend. Allow this only for localhost dev.
+    if (normalizedEnv.startsWith('/')) {
+      if (typeof window !== 'undefined') {
+        const { hostname } = window.location
+        if (hostname === 'localhost' || hostname === '127.0.0.1') {
+          return normalizedEnv
+        }
+      }
+      // Ignore relative API base in production-like environments.
+    } else {
+      return normalizedEnv
+    }
+  }
 
   // Local dev convenience: if you run backend locally without setting env vars.
   if (typeof window !== 'undefined') {
@@ -70,3 +84,10 @@ function computeApiBaseUrl() {
 
 // Central source of truth for all API calls.
 export const API_BASE_URL = computeApiBaseUrl()
+
+// Optional debug hook (safe in prod): lets you verify the resolved value in DevTools.
+// Example: window.__SMART_INVENTORY_API_BASE_URL__
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line no-underscore-dangle
+  window.__SMART_INVENTORY_API_BASE_URL__ = API_BASE_URL
+}

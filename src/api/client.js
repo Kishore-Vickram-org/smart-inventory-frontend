@@ -28,6 +28,18 @@ export async function apiFetch(path, init) {
     const contentType = res.headers.get('content-type') ?? ''
     const text = await res.text()
 
+    if (contentType.includes('text/html') || /^\s*</.test(text)) {
+      throw new Error(
+        [
+          'API request returned HTML (not JSON).',
+          'This usually means the API base URL is wrong and the request hit your static site (GitHub Pages) instead of the Azure backend.',
+          `HTTP ${res.status}`,
+          `Requested: ${apiBase}${path}`,
+          `API base: ${apiBase}`,
+        ].join('\n'),
+      )
+    }
+
     // Spring may return application/problem+json; treat all *json* as JSON.
     if (contentType.toLowerCase().includes('json') && text) {
       try {
