@@ -22,6 +22,10 @@ function normalizeApiBase(raw) {
   const trimmed = (raw ?? '').toString().trim().replace(/\/+$/, '')
   if (!trimmed) return ''
 
+  // Some environments/CI pipelines inject placeholders like "false".
+  // Treat these as "not set".
+  if (/^(false|null|undefined)$/i.test(trimmed)) return ''
+
   // If a full URL is provided but no path, assume the API is under /api
   // (matches the current backend deployment pattern).
   try {
