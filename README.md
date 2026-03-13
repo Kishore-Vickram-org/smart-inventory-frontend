@@ -1,24 +1,25 @@
-# Harbor Frontend (React)
+# Harbor Frontend (Vite + React)
 
-This UI is a **React (JavaScript/JSX)** app built with **Create React App (react-scripts)**.
+This UI is a **React (JavaScript/JSX)** app built with **Vite**.
 
 ## Run locally
 
-From the repo root:
+From this repo root:
 
 ```powershell
-cd frontend
 npm install
-npm start
+npm run dev
 ```
 
-Frontend URL: `http://localhost:3000`
+Frontend URL (Vite): `http://localhost:5173`
 
 ## Backend API
 
-The frontend calls the backend using this base URL:
+The frontend calls the backend using this base URL (build-time env var):
 
-- `REACT_APP_API_BASE_URL` (build-time env var)
+- `REACT_APP_API_BASE_URL` (supported in Vite via `envPrefix`)
+
+If `REACT_APP_API_BASE_URL` is not set, the app falls back to calling `/api` on the same origin.
 
 Requests are made to `${REACT_APP_API_BASE_URL}/items`, `${REACT_APP_API_BASE_URL}/locations`, etc.
 
@@ -28,16 +29,30 @@ If `REACT_APP_API_BASE_URL` is not set and you are running on `localhost`, the a
 
 - `http://127.0.0.1:8080/api`
 
-To override locally, create `frontend/.env`:
+If you are not running a backend locally, set `REACT_APP_API_BASE_URL` to a hosted backend (example below).
+
+To override locally, create `.env` (repo root):
 
 ```env
 REACT_APP_API_BASE_URL=http://127.0.0.1:8080/api
 ```
 
+Example using the older hosted backend:
+
+```env
+REACT_APP_API_BASE_URL=https://smart-ineventory-backend.onrender.com/api
+```
+
+Example using the Azure backend:
+
+```env
+REACT_APP_API_BASE_URL=https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-01.azurewebsites.net/api
+```
+
 Notes:
 
-- `frontend/.env` is intentionally ignored by git, so it will not affect deployments.
-- CRA env vars are baked in at build time; restart the dev server after changing `.env`.
+- Vite env vars are baked in at build time; restart `npm run dev` after changing `.env`.
+- For Azure App Service, set the env var in **Configuration → Application settings** and redeploy to rebuild.
 
 ## Deploy to Vercel
 
@@ -45,7 +60,7 @@ This repo deploys the frontend as a static SPA.
 
 Recommended Vercel settings:
 
-1) Set **Root Directory** to `frontend/`
+1) Set **Root Directory** to the repo root
 2) Add Environment Variable:
 	- `REACT_APP_API_BASE_URL` = `https://<your-backend-host>/api`
 3) Deploy
@@ -61,7 +76,6 @@ This repo’s Vercel config includes a rewrite that proxies `/api/*` to a hosted
 If you fork/host the backend elsewhere, update the rewrite destination in:
 
 - `vercel.json` (repo root)
-- `frontend/vercel.json`
 
 ## Challenges faced (and fixes)
 
@@ -84,12 +98,53 @@ If you fork/host the backend elsewhere, update the rewrite destination in:
 
 ### 3) Environment variables not taking effect
 
-**Problem**: CRA environment variables are evaluated at **build time**. Also, `frontend/.env` is ignored by git so it won’t affect cloud builds.
+**Problem**: Vite environment variables are evaluated at **build time**. Your local `.env` won’t affect a cloud build unless those variables are also set in the cloud build environment.
 
 **Fix**:
 
-- For local dev, use `frontend/.env` and restart `npm start`.
-- For Vercel, set `REACT_APP_API_BASE_URL` in the Vercel dashboard and redeploy.
+- For local dev, use `.env` and restart `npm run dev`.
+- For Vercel/Azure, set `REACT_APP_API_BASE_URL` in the hosting provider’s environment variables and redeploy.
+
+## Deploy to Azure App Service (Node.js)
+
+This project is configured so Azure can build and serve the production SPA automatically:
+
+- `postinstall` runs `npm run build` (Vite outputs to the `build/` folder)
+- `start` runs `serve -s build -l $PORT` (via `scripts/serve-build.js` so it works on Azure Linux/Windows)
+
+### 1) Create the App Service
+
+- Create an **Azure App Service** for **Node.js** (Linux is recommended).
+- Pick a Node LTS runtime (e.g. 18 or 20).
+
+### 2) Configure the backend URL (required)
+
+In **App Service → Configuration → Application settings**, add:
+
+- `REACT_APP_API_BASE_URL` = `https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-01.azurewebsites.net/api`
+
+Notes:
+
+- You can also set it to the host only (`https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-01.azurewebsites.net`) and the frontend will assume `/api`.
+- This value is evaluated at **build time**, so if you change this setting you must redeploy (or trigger a rebuild) for the new value to be baked into the JS bundle.
+
+### 3) Deploy
+
+Use any of these options:
+
+- **Deployment Center → GitHub**: connect the repo and deploy.
+- **Zip deploy**: upload the repo contents (must include `package.json`).
+
+Azure will run:
+
+1) `npm install` (installs dependencies)
+2) `postinstall` → `npm run build`
+3) `npm start` → serves `build/` on `$PORT`
+
+### 4) Verify
+
+- Browse to your App Service URL.
+- Open DevTools → Network and confirm requests go to your backend host.
 
 ### 4) HTTP 409 “Operation violates data integrity constraints”
 

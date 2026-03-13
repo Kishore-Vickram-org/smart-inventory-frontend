@@ -1,24 +1,59 @@
 const defaultBaseSameOrigin = '/api'
 const defaultBaseLocalDev = 'http://127.0.0.1:8080/api'
+const defaultBaseHostedProd =
+  'https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-01.azurewebsites.net/api'
+
+function readEnv(key) {
+  // Vite: import.meta.env (only variables matching envPrefix are exposed)
+  try {
+    // eslint-disable-next-line no-undef
+    if (typeof import.meta !== 'undefined' && import.meta?.env) {
+      // eslint-disable-next-line no-undef
+      const v = import.meta.env[key]
+      if (v != null) return String(v)
+    }
+  } catch {
+    // ignore
+  }
+
+  // Fallback for non-Vite environments (tests / older builds)
+  const v = (typeof process !== 'undefined' && process?.env?.[key]) ?? ''
+  return String(v ?? '')
+}
+
+function normalizeApiBase(raw) {
+  const trimmed = (raw ?? '').toString().trim().replace(/\/+$/, '')
+  if (!trimmed) return ''
+
+  // If a full URL is provided but no path, assume the API is under /api
+  // (matches local dev + same-origin fallback behavior).
+  try {
+    const url = new URL(trimmed)
+    const path = (url.pathname ?? '').trim()
+    if (path === '' || path === '/') {
+      url.pathname = '/api'
+    }
+    // Remove any trailing slash that might come back from URL serialization.
+    return url.toString().replace(/\/+$/, '')
+  } catch {
+    // Non-absolute values like "/api" should be used as-is.
+    return trimmed
+  }
+}
 
 function baseUrl() {
   const env = (
-    (typeof process !== 'undefined' && process?.env?.REACT_APP_API_BASE_URL) ??
-    ''
+    readEnv('REACT_APP_API_BASE_URL') ||
+    readEnv('VITE_API_BASE_URL') ||
+    readEnv('REACT_APP_BACKEND_URL') ||
+    readEnv('VITE_BACKEND_URL')
   ).toString()
 
-  const normalized = env.trim()
+  const normalized = normalizeApiBase(env)
 
   // Some environments accidentally inject placeholders like "false".
   // Treat these as "not set" so local dev can fall back correctly.
-  if (
-    normalized.length > 0 &&
-    normalized.toLowerCase() !== 'false' &&
-    normalized.toLowerCase() !== 'null' &&
-    normalized.toLowerCase() !== 'undefined'
-  ) {
-    return normalized.replace(/\/$/, '')
-  }
+  if (normalized.length > 0) return normalized
 
   // In local dev we call the backend directly (no proxy).
   if (typeof window !== 'undefined') {
@@ -28,7 +63,9 @@ function baseUrl() {
     }
   }
 
-  return defaultBaseSameOrigin
+  // In production we default to the hosted backend unless you explicitly
+  // configure a reverse proxy on the same origin.
+  return defaultBaseHostedProd || defaultBaseSameOrigin
 }
 
 export async function apiFetch(path, init) {

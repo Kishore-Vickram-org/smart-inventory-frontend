@@ -3,15 +3,19 @@
   "private": true,
   "version": "0.0.1",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test"
+    "dev": "vite",
+    "build": "vite build",
+    "postinstall": "npm run build",
+    "start": "node scripts/serve-build.js",
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@vitejs/plugin-react": "^4.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-scripts": "^5.0.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "serve": "^14.2.4",
+    "vite": "^6.2.0"
   },
   "browserslist": {
     "production": [
