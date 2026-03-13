@@ -2,12 +2,15 @@
   "name": "harbor-inventory-frontend",
   "private": true,
   "version": "0.0.1",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "postinstall": "npm run build",
-    "start": "node scripts/serve-build.js",
-    "preview": "vite preview"
+    "preview": "vite preview --host 0.0.0.0 --port 8080 --strictPort",
+    "start": "npm run preview"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.6.0",
