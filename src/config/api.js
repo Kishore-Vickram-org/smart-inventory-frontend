@@ -1,5 +1,4 @@
-const DEFAULT_BACKEND_ORIGIN =
-  'https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-01.azurewebsites.net'
+const DEFAULT_BACKEND_ORIGIN = 'https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-01.azurewebsites.net'
 
 function readEnv(key) {
   // Vite: import.meta.env (only variables matching envPrefix are exposed)
@@ -27,6 +26,14 @@ function normalizeApiBase(raw) {
   // (matches the current backend deployment pattern).
   try {
     const url = new URL(trimmed)
+
+    // Enforce HTTPS for any non-local host to avoid mixed-content blocks
+    // when the frontend is hosted on GitHub Pages (HTTPS).
+    const isLocalHost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+    if (!isLocalHost && url.protocol === 'http:') {
+      url.protocol = 'https:'
+    }
+
     const path = (url.pathname ?? '').trim()
     if (path === '' || path === '/') {
       url.pathname = '/api'
