@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/smart-inventory-frontend/static/css/main.5daea232.css",
+    "main.js": "/smart-inventory-frontend/static/js/main.019687f6.js",
+    "index.html": "/smart-inventory-frontend/index.html",
+    "main.5daea232.css.map": "/smart-inventory-frontend/static/css/main.5daea232.css.map",
+    "main.019687f6.js.map": "/smart-inventory-frontend/static/js/main.019687f6.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.5daea232.css",
+    "static/js/main.019687f6.js"
+  ]
+}

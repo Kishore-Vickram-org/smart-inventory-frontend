@@ -1,6 +1,6 @@
-# Harbor Frontend (Vite + React)
+# Harbor Frontend (Create React App)
 
-This UI is a **React (JavaScript/JSX)** app built with **Vite**.
+This UI is a **React (JavaScript/JSX)** app built with **Create React App (`react-scripts`)**.
 
 ## Run locally
 
@@ -8,16 +8,16 @@ From this repo root:
 
 ```powershell
 npm install
-npm run dev
+npm start
 ```
 
-Frontend URL (Vite): `http://localhost:5173`
+Frontend URL (CRA dev server): `http://localhost:3000`
 
 ## Backend API
 
 The frontend calls the backend using this base URL (build-time env var):
 
-- `REACT_APP_API_BASE_URL` (supported in Vite via `envPrefix`)
+- `REACT_APP_API_BASE_URL`
 
 If `REACT_APP_API_BASE_URL` is not set, the app falls back to calling `/api` on the same origin.
 
@@ -51,7 +51,7 @@ REACT_APP_API_BASE_URL=https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-
 
 Notes:
 
-- Vite env vars are baked in at build time; restart `npm run dev` after changing `.env`.
+- CRA env vars are baked in at build time; restart `npm start` after changing `.env`.
 - For Azure App Service, set the env var in **Configuration → Application settings** and redeploy to rebuild.
 
 ## Deploy to Vercel
@@ -98,7 +98,7 @@ If you fork/host the backend elsewhere, update the rewrite destination in:
 
 ### 3) Environment variables not taking effect
 
-**Problem**: Vite environment variables are evaluated at **build time**. Your local `.env` won’t affect a cloud build unless those variables are also set in the cloud build environment.
+**Problem**: CRA environment variables are evaluated at **build time**. Your local `.env` won’t affect a cloud build unless those variables are also set in the cloud build environment.
 
 **Fix**:
 
@@ -109,8 +109,8 @@ If you fork/host the backend elsewhere, update the rewrite destination in:
 
 This project is configured so Azure can build and serve the production SPA automatically:
 
-- `postinstall` runs `npm run build` (Vite outputs to the `build/` folder)
-- `start` runs `serve -s build -l $PORT` (via `scripts/serve-build.js` so it works on Azure Linux/Windows)
+- `postinstall` runs `npm run build` (CRA outputs to `build/`)
+- Use `npm run serve` to serve `build/` on `$PORT` (via `scripts/serve-build.js` so it works on Azure Linux/Windows)
 
 ### 1) Create the App Service
 

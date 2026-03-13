@@ -1,19 +1,7 @@
 const DEFAULT_BACKEND_ORIGIN = 'https://inventory-backend-cxaqcqh9hnbdbpab.southeastasia-01.azurewebsites.net'
 
 function readEnv(key) {
-  // Vite: import.meta.env (only variables matching envPrefix are exposed)
-  try {
-    // eslint-disable-next-line no-undef
-    if (typeof import.meta !== 'undefined' && import.meta?.env) {
-      // eslint-disable-next-line no-undef
-      const v = import.meta.env[key]
-      if (v != null) return String(v)
-    }
-  } catch {
-    // ignore
-  }
-
-  // Fallback for non-Vite environments (tests / older builds)
+  // CRA / Node: process.env (CRA only exposes REACT_APP_* to the browser)
   const v = (typeof process !== 'undefined' && process?.env?.[key]) ?? ''
   return String(v ?? '')
 }

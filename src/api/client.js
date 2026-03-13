@@ -79,7 +79,7 @@ export async function apiFetch(path, init) {
     throw new Error(
       [
         'API returned HTML instead of JSON.',
-        'This usually means your backend is not running, or VITE_API_BASE_URL / REACT_APP_API_BASE_URL is not set correctly.',
+        'This usually means your backend is not running, or REACT_APP_API_BASE_URL is not set correctly.',
         `Requested: ${path}`,
         `API base: ${API_BASE_URL}`,
       ].join('\n'),

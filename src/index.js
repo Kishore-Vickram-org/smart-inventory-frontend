@@ -9,7 +9,7 @@ if (!rootEl) throw new Error('Root element #root not found')
 
 ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+    <BrowserRouter basename={process.env.PUBLIC_URL || '/'}>
       <App />
     </BrowserRouter>
   </React.StrictMode>,
