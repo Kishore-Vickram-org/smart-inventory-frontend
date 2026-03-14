@@ -1,27 +1,23 @@
 {
   "name": "harbor-inventory-frontend",
-  "homepage": "https://kishore-vickram-org.github.io/smart-inventory-frontend/",
   "private": true,
   "version": "0.0.1",
   "engines": {
-    "node": "18.x"
+    "node": ">=18 <21"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "serve -s build -l 8080",
     "dev": "react-scripts start",
     "build": "react-scripts build",
-    "serve": "node scripts/serve-build.js",
+    "serve": "serve -s build -l 8080",
     "test": "react-scripts test --passWithNoTests",
-    "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
-    "postinstall": "npm run build"
+    "eject": "react-scripts eject"
   },
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.28.0",
-    "serve": "^14.2.4"
+    "serve": "^14.2.6"
   },
   "browserslist": {
     "production": [
@@ -36,7 +32,6 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^6.3.0",
     "react-scripts": "^5.0.1"
   }
 }
