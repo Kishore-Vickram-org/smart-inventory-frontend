@@ -29,7 +29,7 @@ jobs:
           npm run build --if-present
           npm run test --if-present
 
-      - name: Create deployment package
+      - name: Create deployment folder
         run: |
           rm -rf deploy
           mkdir -p deploy/scripts
@@ -48,18 +48,24 @@ jobs:
             }
           }
           JSON
-          (cd deploy && zip -r ../deploy.zip .)
 
-      - name: Inspect deployment package
+      - name: Inspect deployment folder
         run: |
-          ls -la
-          unzip -l deploy.zip | sed -n '1,200p'
+          echo "Listing deploy folder (first 200 entries)"
+          (cd deploy && find . -maxdepth 4 -print | sed -n '1,200p')
+
+          echo "Fail if any file path contains backslash"
+          if (cd deploy && find . -name '*\\*' -print -quit | grep -q .); then
+            echo "ERROR: Found path containing backslash in deploy folder" >&2
+            (cd deploy && find . -name '*\\*' -print | sed -n '1,50p')
+            exit 1
+          fi
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: deploy.zip
+          path: deploy
 
   deploy:
     runs-on: ubuntu-latest
@@ -73,6 +79,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
+
+      - name: Inspect downloaded artifact
+        run: |
+          ls -la
+          find . -maxdepth 4 -print | sed -n '1,200p'
       
       - name: Login to Azure
         uses: azure/login@v2
@@ -97,5 +108,5 @@ jobs:
         with:
           app-name: 'inventory-frontend'
           slot-name: 'Production'
-          package: deploy.zip
+          package: .
           
