@@ -31,7 +31,24 @@ jobs:
 
       - name: Create deployment package
         run: |
-          zip -r deploy.zip build package.json scripts
+          rm -rf deploy
+          mkdir -p deploy/scripts
+          cp -r build deploy/build
+          cp scripts/static-server.js deploy/scripts/static-server.js
+          cat > deploy/package.json <<'JSON'
+          {
+            "name": "inventory-frontend-runtime",
+            "private": true,
+            "version": "1.0.0",
+            "engines": {
+              "node": ">=18 <21"
+            },
+            "scripts": {
+              "start": "node scripts/static-server.js"
+            }
+          }
+          JSON
+          (cd deploy && zip -r ../deploy.zip .)
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
