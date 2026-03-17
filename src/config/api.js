@@ -6,8 +6,15 @@ function readEnv(key) {
   return String(v ?? '')
 }
 
+function stripTrailingSlashes(value) {
+  const s = String(value ?? '')
+  let end = s.length
+  while (end > 0 && s.charCodeAt(end - 1) === 47) end -= 1
+  return end === s.length ? s : s.slice(0, end)
+}
+
 function normalizeApiBase(raw) {
-  const trimmed = (raw ?? '').toString().trim().replace(/\/+$/, '')
+  const trimmed = stripTrailingSlashes((raw ?? '').toString().trim())
   if (!trimmed) return ''
 
   // Some environments/CI pipelines inject placeholders like "false".
@@ -30,7 +37,7 @@ function normalizeApiBase(raw) {
     if (path === '' || path === '/') {
       url.pathname = '/api'
     }
-    return url.toString().replace(/\/+$/, '')
+    return stripTrailingSlashes(url.toString())
   } catch {
     // Non-absolute values like "/api" should be used as-is.
     return trimmed
