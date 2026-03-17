@@ -61,4 +61,45 @@ describe('apiFetch', () => {
     global.fetch.mockResolvedValueOnce(makeResponse({ ok: true, status: 200, contentType: 'application/json', body: '{"a":1}' }))
     await expect(apiFetch('/x')).resolves.toEqual({ a: 1 })
   })
+
+  test('returns undefined for ok response with empty body', async () => {
+    global.fetch.mockResolvedValueOnce(makeResponse({ ok: true, status: 200, contentType: 'application/json', body: '' }))
+    await expect(apiFetch('/x')).resolves.toBeUndefined()
+  })
+
+  test('throws helpful error if ok response looks like HTML', async () => {
+    global.fetch.mockResolvedValueOnce(
+      makeResponse({ ok: true, status: 200, contentType: 'text/html', body: '<!doctype html><html></html>' }),
+    )
+    await expect(apiFetch('/x')).rejects.toThrow(/HTML instead of JSON/i)
+  })
+
+  test('parses ok JSON for json subtypes', async () => {
+    global.fetch.mockResolvedValueOnce(
+      makeResponse({ ok: true, status: 200, contentType: 'application/problem+json', body: '{"a":1}' }),
+    )
+    await expect(apiFetch('/x')).resolves.toEqual({ a: 1 })
+  })
+
+  test('throws detail/title/error from JSON error payload', async () => {
+    global.fetch
+      .mockResolvedValueOnce(
+        makeResponse({ ok: false, status: 400, contentType: 'application/json', body: JSON.stringify({ detail: 'D' }) }),
+      )
+      .mockResolvedValueOnce(
+        makeResponse({ ok: false, status: 400, contentType: 'application/json', body: JSON.stringify({ title: 'T' }) }),
+      )
+      .mockResolvedValueOnce(
+        makeResponse({ ok: false, status: 400, contentType: 'application/json', body: JSON.stringify({ error: 'E' }) }),
+      )
+
+    await expect(apiFetch('/x')).rejects.toThrow('D')
+    await expect(apiFetch('/x')).rejects.toThrow('T')
+    await expect(apiFetch('/x')).rejects.toThrow('E')
+  })
+
+  test('falls back to raw text when JSON error payload is invalid', async () => {
+    global.fetch.mockResolvedValueOnce(makeResponse({ ok: false, status: 400, contentType: 'application/json', body: '{' }))
+    await expect(apiFetch('/x')).rejects.toThrow('{')
+  })
 })

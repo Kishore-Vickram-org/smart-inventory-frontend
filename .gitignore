@@ -10,6 +10,9 @@ lerna-debug.log*
 node_modules
 *.local
 
+# Test coverage output
+coverage/
+
 # Tool caches / runtime artifacts
 .parcel-cache/
 .frontend.pid
