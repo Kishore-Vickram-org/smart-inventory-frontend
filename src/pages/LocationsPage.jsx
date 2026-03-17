@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { createLocation, deleteLocation, listLocations, updateLocation } from '../api/inventoryApi'
+import Modal from '../components/Modal'
+import Toast from '../components/Toast'
 
 const LOCATION_TYPES = ['DOCK', 'YARD', 'WAREHOUSE', 'ZONE', 'AISLE', 'BIN']
 
@@ -249,41 +251,5 @@ function LocationForm({ mode, location, onCancel, onSaved, onError }) {
         </button>
       </div>
     </form>
-  )
-}
-
-function Modal({ open, title, children, onClose }) {
-  if (!open) return null
-  return (
-    <div className="modal" role="dialog" aria-modal="true">
-      <button className="modal__backdrop" type="button" onClick={onClose} aria-label="Close" />
-      <div className="modal__panel">
-        <div className="modal__head">
-          <div className="modal__title">{title}</div>
-          <button className="btn btn--small btn--ghost" type="button" onClick={onClose}>
-            Close
-          </button>
-        </div>
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function Toast({ message, onClose }) {
-  useEffect(() => {
-    if (!message) return
-    const t = setTimeout(onClose, 2200)
-    return () => clearTimeout(t)
-  }, [message, onClose])
-
-  if (!message) return null
-  return (
-    <div className="toast" role="status" aria-live="polite">
-      {message}
-      <button className="toast__close" type="button" onClick={onClose} aria-label="Close">
-        ×
-      </button>
-    </div>
   )
 }
