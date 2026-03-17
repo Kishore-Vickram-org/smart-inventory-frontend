@@ -6,7 +6,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-COPY . .
+COPY public ./public
+COPY src ./src
+
+RUN chown -R node:node /app
+USER node
 
 ENV HOST=0.0.0.0 \
 	PORT=3000 \
