@@ -172,9 +172,29 @@ export default function ItemsPage() {
                         <button className="btn btn--small btn--ghost" type="button" onClick={() => setEditItem(it)}>
                           Edit
                         </button>
-                        <button className="btn btn--small btn--danger" type="button" onClick={() => setDeleteTarget(it)}>
-                          Delete
-                        </button>
+                        <button
+  className="btn btn--small btn--danger"
+  type="button"
+  onClick={async () => {
+    const password = prompt('Enter Admin Password')
+
+    if (password !== '2005') {
+      alert('Incorrect password')
+      return
+    }
+
+    try {
+      await deleteItem(it.id)
+      alert('Item deleted successfully')
+      // refresh list after delete
+      window.location.reload()
+    } catch (e) {
+      alert('Delete failed')
+    }
+  }}
+>
+  Delete
+</button>
                       </div>
                     </td>
                   </tr>
