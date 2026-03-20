@@ -46,32 +46,6 @@ export default function ItemsPage() {
     })
   }, [items, query])
 
-  // 📥 CSV DOWNLOAD
-  function handleDownloadCSV() {
-    if (!items.length) return
-
-    const headers = ['SKU', 'Name', 'Description']
-
-    const rows = items.map((it) => [
-      it.sku,
-      it.name,
-      it.description ?? ''
-    ])
-
-    const csvContent =
-      [headers, ...rows]
-        .map((row) => row.map((val) => `"${val}"`).join(','))
-        .join('\n')
-
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-
-    const link = document.createElement('a')
-    link.href = url
-    link.download = 'items.csv'
-    link.click()
-  }
-
   // ➕ Create Item
   async function handleCreate() {
     setError(null)
@@ -153,11 +127,6 @@ export default function ItemsPage() {
         <section className="card">
           <div className="card__head">
             <h2>Item List ({filteredItems.length})</h2>
-
-            {/* ✅ DOWNLOAD BUTTON */}
-            <button onClick={handleDownloadCSV}>
-              Download CSV
-            </button>
           </div>
 
           <table>
