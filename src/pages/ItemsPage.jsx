@@ -44,6 +44,34 @@ export default function ItemsPage() {
     })
   }, [items, query])
 
+  // ✅ CSV DOWNLOAD FUNCTION
+  function handleDownloadCSV() {
+    if (!items.length) return
+
+    const headers = ['SKU', 'Name', 'Description']
+
+    const rows = items.map((it) => [
+      it.sku,
+      it.name,
+      it.description ?? ''
+    ])
+
+    const csvContent =
+      [headers, ...rows]
+        .map((row) => row.map((val) => `"${val}"`).join(','))
+        .join('\n')
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', 'items.csv')
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   async function handleCreate() {
     setError(null)
     const cleanSku = sku.trim()
@@ -82,6 +110,7 @@ export default function ItemsPage() {
       {loading ? <div className="alert">Loading…</div> : null}
 
       <div className="grid">
+        {/* ADD ITEM */}
         <section className="card">
           <div className="card__head">
             <h2 className="card__title">Add Item</h2>
@@ -104,30 +133,32 @@ export default function ItemsPage() {
                   value={sku}
                   onChange={(e) => setSku(e.target.value)}
                   onBlur={() => setSku((s) => s.trim())}
-                  placeholder="e.g. STEEL-001"
                 />
               </label>
+
               <label className="label">
                 Name
-                <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Item name" />
+                <input
+                  className="input"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </label>
             </div>
 
             <label className="label">
-              Description (optional)
+              Description
               <textarea
                 className="input"
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Short description…"
               />
             </label>
 
             <div className="actions">
               <button
                 className="btn btn--ghost"
-                type="button"
                 onClick={() => {
                   setSku('')
                   setName('')
@@ -136,17 +167,25 @@ export default function ItemsPage() {
               >
                 Clear
               </button>
-              <button className="btn" type="button" onClick={handleCreate} disabled={loading}>
+
+              <button className="btn" onClick={handleCreate}>
                 Create
               </button>
             </div>
           </div>
         </section>
 
+        {/* ITEM LIST */}
         <section className="card">
           <div className="card__head">
             <h2 className="card__title">Item List</h2>
-            <div className="muted">{filteredItems.length} item(s)</div>
+
+            {/* ✅ DOWNLOAD BUTTON */}
+            <div className="card__tools">
+              <button className="btn btn--ghost" onClick={handleDownloadCSV}>
+                Download CSV
+              </button>
+            </div>
           </div>
 
           <div className="tableWrap">
@@ -159,23 +198,16 @@ export default function ItemsPage() {
                   <th className="right">Actions</th>
                 </tr>
               </thead>
+
               <tbody>
                 {filteredItems.map((it) => (
                   <tr key={it.id}>
-                    <td className="mono">{it.sku}</td>
+                    <td>{it.sku}</td>
                     <td>{it.name}</td>
-                    <td className="ellipsis" title={it.description ?? ''}>
-                      {it.description ?? ''}
-                    </td>
+                    <td>{it.description ?? ''}</td>
                     <td className="right">
-                      <div className="rowActions">
-                        <button className="btn btn--small btn--ghost" type="button" onClick={() => setEditItem(it)}>
-                          Edit
-                        </button>
-                        <button className="btn btn--small btn--danger" type="button" onClick={() => setDeleteTarget(it)}>
-                          Delete
-                        </button>
-                      </div>
+                      <button onClick={() => setEditItem(it)}>Edit</button>
+                      <button onClick={() => setDeleteTarget(it)}>Delete</button>
                     </td>
                   </tr>
                 ))}
@@ -185,7 +217,8 @@ export default function ItemsPage() {
         </section>
       </div>
 
-      <Modal open={Boolean(editItem)} title="Edit Item" onClose={() => setEditItem(null)}>
+      {/* EDIT MODAL */}
+      <Modal open={Boolean(editItem)} onClose={() => setEditItem(null)}>
         <EditItemForm
           item={editItem}
           onCancel={() => setEditItem(null)}
@@ -198,31 +231,20 @@ export default function ItemsPage() {
         />
       </Modal>
 
-      <Modal open={Boolean(deleteTarget)} title="Delete item?" onClose={() => setDeleteTarget(null)}>
-        <p className="muted">This will permanently delete “{deleteTarget?.sku}”.</p>
-        <div className="actions">
-          <button className="btn btn--ghost" type="button" onClick={() => setDeleteTarget(null)}>
-            Cancel
-          </button>
-          <button
-            className="btn btn--danger"
-            type="button"
-            onClick={async () => {
-              if (!deleteTarget) return
-              setError(null)
-              try {
-                await deleteItem(deleteTarget.id)
-                setDeleteTarget(null)
-                await refresh()
-                setToast('Item deleted')
-              } catch (e) {
-                setError(e instanceof Error ? e.message : 'Delete failed')
-              }
-            }}
-          >
-            Delete
-          </button>
-        </div>
+      {/* DELETE MODAL */}
+      <Modal open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)}>
+        <p>Delete {deleteTarget?.sku}?</p>
+        <button onClick={() => setDeleteTarget(null)}>Cancel</button>
+        <button
+          onClick={async () => {
+            await deleteItem(deleteTarget.id)
+            setDeleteTarget(null)
+            await refresh()
+            setToast('Item deleted')
+          }}
+        >
+          Delete
+        </button>
       </Modal>
 
       <Toast message={toast} onClose={() => setToast(null)} />
@@ -243,44 +265,22 @@ function EditItemForm({ item, onCancel, onSaved, onError }) {
 
   return (
     <form
-      className="form"
       onSubmit={async (e) => {
         e.preventDefault()
-        if (!item) return
         try {
-          await updateItem(item.id, { name: name.trim(), description: description.trim() ? description.trim() : undefined })
+          await updateItem(item.id, { name, description })
           onSaved()
         } catch (err) {
-          onError(err instanceof Error ? err.message : 'Update failed')
+          onError('Update failed')
         }
       }}
     >
-      <div className="form__row">
-        <label className="label">
-          SKU
-          <input className="input" value={item?.sku ?? ''} disabled />
-        </label>
-        <label className="label">
-          Name
-          <input className="input" value={name} onChange={(e) => setName(e.target.value)} />
-        </label>
-      </div>
+      <input value={item?.sku} disabled />
+      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <textarea value={description} onChange={(e) => setDescription(e.target.value)} />
 
-      <label className="label">
-        Description
-        <textarea className="input" rows={3} value={description} onChange={(e) => setDescription(e.target.value)} />
-      </label>
-
-      <div className="actions">
-        <button className="btn btn--ghost" type="button" onClick={onCancel}>
-          Cancel
-        </button>
-        <button className="btn" type="submit">
-          Save
-        </button>
-      </div>
+      <button onClick={onCancel}>Cancel</button>
+      <button type="submit">Save</button>
     </form>
   )
-}   <button className="btn btn--small btn--danger" type="button" onClick={() => setDeleteTarget(it)}>
-                          Delete
-                        </button>
+}
