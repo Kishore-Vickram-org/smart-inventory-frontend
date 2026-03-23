@@ -1,6 +1,6 @@
 # Harbor Frontend (Create React App)
 
-This UI is a **React (JavaScript/JSX)** app built with **Create React App (`react-scripts`)**.
+ This UI is a **React (JavaScript/JSX)** app built with **Create React App (`react-scripts`)**.
 
 ## Run locally
 
