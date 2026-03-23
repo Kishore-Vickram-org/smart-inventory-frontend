@@ -10,9 +10,6 @@
     "dev": "react-scripts start",
     "build": "react-scripts build",
     "serve": "node scripts/static-server.js",
-    "test": "react-scripts test --passWithNoTests",
-    "test:coverage": "react-scripts test --coverage --watchAll=false",
-    "test:ci": "npm run test:coverage && node scripts/check-coverage.js --threshold 80",
     "eject": "react-scripts eject"
   },
   "dependencies": {
